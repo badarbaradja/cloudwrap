@@ -84,87 +84,120 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(callback, PANCAKE_FALL_DURATION);
     }
 
-    function showContent(sectionId) {
-        const sectionToShow = document.getElementById(sectionId);
-        if (sectionToShow) {
-            sectionToShow.style.display = 'flex';
-            sectionToShow.scrollIntoView({ behavior: 'smooth', block: 'start' });
+function showContent(sectionId) {
+    const sectionToShow = document.getElementById(sectionId);
+    if (sectionToShow) {
+        sectionToShow.style.display = 'flex';
+        sectionToShow.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        // 🔥 PERBAIKAN LOGIKA POSISI PANCAKE
+        if (sectionId === 'extra-section' || sectionId === 'payment-section') {
+            globalPancakeContainer.classList.add('hidden');
+        
+        } else if (sectionId === 'finish-summary-section') {
+            // 1. Pindahkan pancake ke "rumah" barunya
+            if (finishPancakeTarget) {
+                finishPancakeTarget.appendChild(globalPancakeContainer);
+            }
+            globalPancakeContainer.classList.remove('hidden');
             
-            // 🔥 PERBAIKAN LOGIKA POSISI PANCAKE
-            if (sectionId === 'extra-section' || sectionId === 'payment-section') {
-                globalPancakeContainer.classList.add('hidden');
+            // 2. Reset SEMUA style untuk mengikuti flexbox
+            globalPancakeContainer.style.position = 'relative';
+            globalPancakeContainer.style.bottom = 'auto';
+            globalPancakeContainer.style.top = 'auto';
+            globalPancakeContainer.style.left = 'auto';
+            globalPancakeContainer.style.right = 'auto';
+            globalPancakeContainer.style.marginLeft = '0';
+            globalPancakeContainer.style.marginRight = '0';
+            globalPancakeContainer.style.transform = 'none';
             
-            } else if (sectionId === 'finish-summary-section') {
-                // 1. Pindahkan pancake ke "rumah" barunya di dalam section
-                if (finishPancakeTarget) {
-                    finishPancakeTarget.appendChild(globalPancakeContainer);
-                }
-                globalPancakeContainer.classList.remove('hidden');
-                
-                // 2. Hapus class/style posisi absolut agar mengikuti alur flexbox
-                globalPancakeContainer.classList.remove('finish-position');
-                globalPancakeContainer.classList.remove('animate-drop-finish');
-                globalPancakeContainer.style.position = 'relative'; // Menjadi elemen normal
-                globalPancakeContainer.style.bottom = 'auto';
-                globalPancakeContainer.style.left = 'auto';
-                globalPancakeContainer.style.marginLeft = 'auto';
-                
+            globalPancakeContainer.classList.remove('animate-drop');
+            globalPancakeContainer.classList.remove('finish-position');
+            globalPancakeContainer.classList.remove('animate-drop-finish');
+            
+        } else {
+            // 🔥 CRITICAL FIX: Section biasa (fruit, topping, sauce)
+            // 1. Kembalikan ke parent asli DULU
+            if (globalPancakeContainer.parentNode !== pancakeOriginalParent) {
+                pancakeOriginalParent.appendChild(globalPancakeContainer);
+            }
+            
+            // 2. RESET SEMUA inline style ke default
+            globalPancakeContainer.style.position = '';
+            globalPancakeContainer.style.left = '';
+            globalPancakeContainer.style.bottom = '';
+            globalPancakeContainer.style.top = '';
+            globalPancakeContainer.style.right = '';
+            globalPancakeContainer.style.marginLeft = '';
+            globalPancakeContainer.style.marginRight = '';
+            globalPancakeContainer.style.transform = '';
+            globalPancakeContainer.style.width = '';
+            globalPancakeContainer.style.height = '';
+            
+            // 3. Hapus semua class yang mengubah posisi
+            globalPancakeContainer.classList.remove('hidden');
+            globalPancakeContainer.classList.remove('finish-position');
+            globalPancakeContainer.classList.remove('animate-drop-finish');
+            
+            // 4. Re-trigger animasi drop (opsional, bisa di-skip jika dari back button)
+            // Cek apakah ini dari transisi normal atau back button
+            if (!isTransitioning) {
+                globalPancakeContainer.classList.remove('animate-drop');
+                void globalPancakeContainer.offsetHeight; // Force reflow
+                globalPancakeContainer.classList.add('animate-drop');
             } else {
-                // 1. Kembalikan pancake ke parent aslinya (body)
+                // Jika dari back, langsung ke posisi final tanpa animasi
+                globalPancakeContainer.classList.remove('animate-drop');
+                globalPancakeContainer.classList.add('animate-drop');
+            }
+        }
+        
+        setTimeout(() => sectionToShow.classList.add('reveal'), 50);
+        currentSectionId = sectionId;
+    }
+}
+function hideCurrentContent(callback) {
+    if (currentSectionId) {
+        const sectionToHide = document.getElementById(currentSectionId);
+        if (sectionToHide) {
+            sectionToHide.classList.remove('reveal');
+            
+            // 🔥 PERBAIKAN: Reset pancake position SEBELUM hide
+            if (currentSectionId === 'finish-summary-section') {
+                // Kembalikan ke body dengan RESET SEMUA style
                 if (globalPancakeContainer.parentNode !== pancakeOriginalParent) {
                     pancakeOriginalParent.appendChild(globalPancakeContainer);
-                    // 2. Kembalikan style absolut untuk "mengikuti" di bawah
-                    globalPancakeContainer.style.position = 'absolute';
-                    globalPancakeContainer.style.left = '50%';
-                    // Sesuaikan margin-left berdasarkan ukuran di CSS (default: -175px)
-                    const pancakeWidth = globalPancakeContainer.offsetWidth;
-                    globalPancakeContainer.style.marginLeft = `-${pancakeWidth / 2}px`;
                 }
-
-                globalPancakeContainer.classList.remove('hidden');
+                
+                // RESET SEMUA inline style
+                globalPancakeContainer.style.position = '';
+                globalPancakeContainer.style.left = '';
+                globalPancakeContainer.style.bottom = '';
+                globalPancakeContainer.style.top = '';
+                globalPancakeContainer.style.right = '';
+                globalPancakeContainer.style.marginLeft = '';
+                globalPancakeContainer.style.marginRight = '';
+                globalPancakeContainer.style.transform = '';
+                globalPancakeContainer.style.width = '';
+                globalPancakeContainer.style.height = '';
+                
+                // Hapus class yang tidak perlu
                 globalPancakeContainer.classList.remove('finish-position');
                 globalPancakeContainer.classList.remove('animate-drop-finish');
+                globalPancakeContainer.classList.add('animate-drop'); // Pastikan posisi final
             }
-            // --- AKHIR PERBAIKAN ---
             
-            setTimeout(() => sectionToShow.classList.add('reveal'), 50);
-            currentSectionId = sectionId;
-        }
-    }
-
-    function hideCurrentContent(callback) {
-        if (currentSectionId) {
-            const sectionToHide = document.getElementById(currentSectionId);
-            if (sectionToHide) {
-                sectionToHide.classList.remove('reveal');
-                
-                // 🔥 PERBAIKAN: Kembalikan pancake ke body saat meninggalkan finish-section
-                if (currentSectionId === 'finish-summary-section') {
-                    if (globalPancakeContainer.parentNode !== pancakeOriginalParent) {
-                        pancakeOriginalParent.appendChild(globalPancakeContainer);
-                        // Kembalikan style absolut
-                        globalPancakeContainer.style.position = 'absolute';
-                        globalPancakeContainer.style.left = '50%';
-                        const pancakeWidth = globalPancakeContainer.offsetWidth;
-                        globalPancakeContainer.style.marginLeft = `-${pancakeWidth / 2}px`;
-                    }
-                    globalPancakeContainer.classList.remove('finish-position');
-                    globalPancakeContainer.classList.remove('animate-drop-finish');
-                }
-                
-                setTimeout(() => {
-                    sectionToHide.style.display = 'none';
-                    if (callback) callback();
-                }, CONTENT_FADE_DURATION);
-            } else {
-                 if (callback) callback();
-            }
+            setTimeout(() => {
+                sectionToHide.style.display = 'none';
+                if (callback) callback();
+            }, CONTENT_FADE_DURATION);
         } else {
-            if (callback) callback();
+             if (callback) callback();
         }
+    } else {
+        if (callback) callback();
     }
-    
-    function runFullTransition(targetSectionId) {
+}    function runFullTransition(targetSectionId) {
         if (isTransitioning) return;
         isTransitioning = true;
         
