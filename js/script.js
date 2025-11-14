@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 0. PENGATURAN PENTING & KONSTANTA
     // =============================================
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdpz5YyD8tGjZBonjK8wiKHo2tK6dqtEiO0uQqZpt9fuxiLVi9qrYJsfoa0jXBx_wk_A/exec";
-    const BASE_PRICE = 15000;
+    const BASE_PRICE = 17000;
     const EXTRA_PRICE = 2000;
     const PANCAKE_FALL_DURATION = 2100;
     const CONTENT_FADE_DURATION = 500;
